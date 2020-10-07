@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Midterm Practical</title>
+          <header> Map of Percent Aging Population in USA Counties and States </header>
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+        integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+        crossorigin=""/>
+
+        <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+        integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+        crossorigin=""></script>
+
+        <style type="text/css">
+          html, body { margin: 0; padding: 0; height: 100%; }
+          #map { min-height: 100%; }
+        </style>
+
+        <script type="text/javascript" src="data.js"></script>
+
+        <script type="text/javascript" src="data2.js"></script>
+
+        <style>
+          /* Optional: adjust the values below to change the appearance of the legend */
+          .legend {
+              padding: 6px 8px;
+              line-height: 18px;
+              background: rgba(255,255,255,0.9);
+              box-shadow: 0 0 15px rgba(0,0,0,0.2);
+              border-radius: 5px;
+          }
+
+           /* Optional: adjust the values below to change the appearance of the legend color boxes */
+           .legend i {
+              width: 18px;
+              height: 18px;
+              float: left;
+              margin-right: 8px;
+              opacity: 0.7;
+          }
+        </style>
+
+    </head>
+
+    <body>
+        <div id="map"></div>
+
+        <script type="text/javascript">
+
+        var map = L.map('map', {
+            center: [40.2625206,-96.970301],
+            zoom: 4,
+        });
+
+          var canvas = L.tileLayer('  https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png', {
+             attribution: 'Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL.',
+             maxZoom: 15,
+             minZoom: 4,
+           }).addTo(map);
+
+
+           function getColor(value) {
+      return value > 23 ? '#a63603':
+             value > 18.5  ? '#e6550d':
+             value > 15.1  ? '#fd8d3c':
+             value > 11.8  ? '#fdbe85':
+                           '#feedde';
+  }
+
+            function style(feature){
+            return {
+            fillColor: getColor(feature.properties.per_aging),   // pop_den is the field name for the population density data
+            weight: 3,
+            opacity: 2,
+            color: 'gray',
+            fillOpacity: 0.9,
+            dashArray: 5,
+            };
+            }
+
+
+
+
+           var counties = L.geoJson(data, {style:style});
+
+           var state = L.geoJson(data2, {style:style});
+
+
+
+           function resetHighlight(e) {
+               counties.resetStyle(e.target);
+           }
+
+           counties = L.geoJson(data, {
+               style:style,
+
+           }).bindTooltip(function (layer){
+               return layer.feature.properties.NAMELSAD10
+                      + '<p style="color:purple">' + layer.feature.properties.per_aging.toString() + ' % aging population (age 65+) </p>';
+           }).addTo(map);
+
+
+           function resetHighlight(e) {
+               state.resetStyle(e.target);
+           }
+
+           state = L.geoJson(data2, {
+               style:style,
+
+           }).bindTooltip(function (layer){
+               return layer.feature.properties.NAME10
+                      + '<p style="color:purple">' + layer.feature.properties.per_aging.toString() + ' % aging population (age 65+) </p>';
+           }).addTo(map);
+
+
+
+
+
+
+
+
+
+
+
+           var legend = L.control({position: 'bottomright'}); // Try the other three corners if you like.
+
+             legend.onAdd = function (map) {
+
+                 var div = L.DomUtil.create('div', 'legend'),
+                     grades = [0, 11.8, 15.1, 18.5, 23]; // The break values to define the intervals of population, note we begin from 0 here
+
+                 div.innerHTML = '<b>Percent Aging by USA Counties and States <br> 2018 <br></b>'; // The legend title (HTML-based), in this case it's Population Density 2011
+
+                 // Loop through our the classes and generate a label with a color box for each interval.
+                 // If you are creating a choropleth map, you DO NOT need to change lines below.
+                 for (var i = 0; i < grades.length; i++) {
+                     div.innerHTML +=
+                     '<i style="background:' + getColor(grades[i] + 1) + '"></i>' +
+                     grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+                 }
+
+                 return div;
+             };
+
+             legend.addTo(map);
+
+             var basemaps = {
+    "Base Map": canvas
+};
+
+             var overlaymaps = {
+    "Aging by County": counties,
+    "Aging by State": state,
+  };
+
+    L.control.layers( basemaps, overlaymaps ).addTo(map);
+
+
+
+
+
+
+        </script>
+   </body>
+</html>
